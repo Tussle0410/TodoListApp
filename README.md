@@ -8,12 +8,12 @@ ClassU의 홍드로이드님의 To-Do 리스트 앱 만들기 강좌에 대한 �
 
 
 
-### Studying
+## Studying
 
 RoomDB, ViewBinding, ADMob .... etc
 
 
-#### Kakao Oven(예상 어플 계획)
+## Kakao Oven(예상 어플 화면)
 
 *[OvenUrl](https://ovenapp.io/view/zz4HdTpRtHiJlpgcZ2y2waF6K0Pxz9JX/) - Kakao Oven
 
