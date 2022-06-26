@@ -1,9 +1,16 @@
 package com.tussle.todolistapp
 
+import android.content.DialogInterface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.LayoutInflater
+import androidx.appcompat.app.AlertDialog
 import com.tussle.todolistapp.adapter.TodoAdapter
 import com.tussle.todolistapp.databinding.ActivityListMainBinding
+import com.tussle.todolistapp.databinding.DialogEditBinding
+import com.tussle.todolistapp.model.TodoInfo
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ListMainActivity : AppCompatActivity() {
     private lateinit var binding : ActivityListMainBinding
@@ -15,5 +22,23 @@ class ListMainActivity : AppCompatActivity() {
 
         todoAdapter = TodoAdapter()
         binding.rvTodo.adapter = todoAdapter
+
+        binding.btnWrite.setOnClickListener {
+            val bindingDialog = DialogEditBinding.inflate(LayoutInflater.from(binding.root.context),binding.root,false)
+            AlertDialog.Builder(this)
+                .setTitle("To-Do 남기기")
+                .setView(bindingDialog.root)
+                .setPositiveButton("작성완료",DialogInterface.OnClickListener { dialogInterface, i ->
+                    val todoItem = TodoInfo()
+                    todoItem.todoContent = bindingDialog.etMemo.text.toString()
+                    todoItem.todoDate = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
+                    todoAdapter.addListItem(todoItem)
+                    todoAdapter.notifyDataSetChanged()
+                })
+                .setNegativeButton("취소",DialogInterface.OnClickListener { dialogInterface, i ->
+
+                })
+                .show()
+        }
     }
 }
