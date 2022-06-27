@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.appcompat.app.AlertDialog
 import androidx.room.RoomDatabase
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.MobileAds
 import com.tussle.todolistapp.adapter.TodoAdapter
 import com.tussle.todolistapp.database.TodoDatabase
 import com.tussle.todolistapp.databinding.ActivityListMainBinding
@@ -25,6 +27,9 @@ class ListMainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityListMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        MobileAds.initialize(this){}
+        val adRequest = AdRequest.Builder().build()
+        binding.adView.loadAd(adRequest)
 
         todoAdapter = TodoAdapter()
         binding.rvTodo.adapter = todoAdapter
