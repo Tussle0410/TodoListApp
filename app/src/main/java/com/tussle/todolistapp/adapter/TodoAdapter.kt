@@ -1,36 +1,26 @@
 package com.tussle.todolistapp.adapter
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.DialogInterface
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import com.tussle.todolistapp.database.TodoDatabase
 import com.tussle.todolistapp.databinding.DialogEditBinding
 import com.tussle.todolistapp.databinding.ListItemTodoBinding
 import com.tussle.todolistapp.model.TodoInfo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
 class TodoAdapter : RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
     private var lstTodo : ArrayList<TodoInfo> = ArrayList()
-    init {
-        val todoItem1 = TodoInfo()
-        todoItem1.todoContent = "컴퓨터 사용시간 줄이기"
-        todoItem1.todoDate = "2022-06-01 22:23"
-        lstTodo.add(todoItem1)
-
-        val todoItem2 = TodoInfo()
-        todoItem2.todoContent = "배달 음식 줄이기"
-        todoItem2.todoDate = "2022-05-01 22:23"
-        lstTodo.add(todoItem2)
-
-        val todoItem3 = TodoInfo()
-        todoItem3.todoContent = "늦잠 자지 말기"
-        todoItem3.todoDate = "2022-04-01 22:23"
-        lstTodo.add(todoItem3)
-    }
+    private lateinit var roomDatabase : TodoDatabase
     fun addListItem(todoItem : TodoInfo){
         lstTodo.add(0,todoItem)
     }
@@ -44,9 +34,19 @@ class TodoAdapter : RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
                     .setTitle("[주의]")
                     .setMessage("제거하시면 데이터는 복구되지 않습니다!\n정말 제거하시겠습니까?")
                     .setPositiveButton("제거",DialogInterface.OnClickListener { dialogInterface, i ->
-                        lstTodo.remove(todoItem)
-                        notifyDataSetChanged()
-                        Toast.makeText(binding.root.context,"제거되었습니다.",Toast.LENGTH_SHORT).show()
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val innerLstTodo = roomDatabase.todoDao().getAllReadDate()
+                            for(item in innerLstTodo){
+                                if(item.todoContent == todoItem.todoContent && item.todoDate == todoItem.todoDate){
+                                    roomDatabase.todoDao().deleteTodoData(item)
+                                }
+                            }
+                            lstTodo.remove(todoItem)
+                            (binding.root.context as Activity).runOnUiThread {
+                                notifyDataSetChanged()
+                                Toast.makeText(binding.root.context,"제거되었습니다.",Toast.LENGTH_SHORT).show()
+                            }
+                        }
                     })
                     .setNegativeButton("취소",DialogInterface.OnClickListener { dialogInterface, i ->
 
@@ -58,12 +58,23 @@ class TodoAdapter : RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
                 AlertDialog.Builder(binding.root.context)
                     .setTitle("To-Do 남기기")
                     .setView(bindingDialog.root)
-                    .setPositiveButton("작성완료",DialogInterface.OnClickListener { dialogInterface, i ->
-                        val todoItem = TodoInfo()
+                    .setPositiveButton("수정완료",DialogInterface.OnClickListener { dialogInterface, i ->
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val innerLstTodo = roomDatabase.todoDao().getAllReadDate()
+                            for(item in innerLstTodo){
+                                if (item.todoContent == todoItem.todoContent && item.todoDate == todoItem.todoDate){
+                                    item.todoContent = bindingDialog.etMemo.text.toString()
+                                    item.todoDate = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
+                                    roomDatabase.todoDao().updateTodoData(item)
+                                }
+                            }
+                        }
                         todoItem.todoContent = bindingDialog.etMemo.text.toString()
                         todoItem.todoDate = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
                         lstTodo.set(adapterPosition,todoItem)
-                        notifyDataSetChanged()
+                        (binding.root.context as Activity).runOnUiThread{
+                                notifyDataSetChanged()
+                        }
                     })
                     .setNegativeButton("취소",DialogInterface.OnClickListener { dialogInterface, i ->
 
@@ -74,6 +85,7 @@ class TodoAdapter : RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
     }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TodoAdapter.TodoViewHolder {
         val binding = ListItemTodoBinding.inflate(LayoutInflater.from(parent.context),parent,false)
+        roomDatabase = TodoDatabase.getInstance(binding.root.context)!!
         return TodoViewHolder(binding)
     }
 

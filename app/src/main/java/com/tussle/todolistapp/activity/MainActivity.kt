@@ -1,4 +1,4 @@
-package com.tussle.todolistapp
+package com.tussle.todolistapp.activity
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
